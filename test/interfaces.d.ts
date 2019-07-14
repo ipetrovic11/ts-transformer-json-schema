@@ -1,6 +1,6 @@
 /**
  * @$$strict true
-*/
+ */
 export interface IExternal {
     /**
      * @empty false
