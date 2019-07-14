@@ -256,19 +256,19 @@ describe("Test json schema tranformer", () => {
 			}
 
 			interface IOuter {
-				neasted: IInner;
+				nested: IInner;
 				num: number;
 			}
 
 			expect(schema<IOuter>()).toStrictEqual({
-				type: "object",
-				props: {
-					neasted: { 
-						num: { type: 'number'},
-						str: { type: 'string'}
+					num: { type: 'number'},
+					nested: {
+						type: "object",
+						props: {
+								num: { type: 'number'},
+								str: { type: 'string'},
+						},
 					},
-					num: { type: 'number'}
-				}
 			});
 		});
 	});
@@ -416,7 +416,7 @@ describe("Test json schema tranformer", () => {
 			});
 		});
 
-		it("Additional properties neasted", () => {
+		it("Additional properties nested", () => {
 			interface IAdditional {
 				/**
 				 * @empty false
@@ -439,18 +439,18 @@ describe("Test json schema tranformer", () => {
 				additional: IAdditional;
 			}
 			expect(schema<IAdditional2>()).toStrictEqual({
-				type: "object",
-    			props: {
 					str: { type: "string", pattern: "^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$" },
 					additional: {
-						str: { type: "string", empty: false, numeric: true },
-						num: { type: "number", positive: true, convert: true }
+						type: "object",
+						props: {
+							str: { type: "string", empty: false, numeric: true },
+							num: { type: "number", positive: true, convert: true },
+						}
 					}
-				}
 			});
 		});
 
-		it("Additional properties neasted disabled", () => {
+		it("Additional properties nested disabled", () => {
 			interface IAdditional {
 				/**
 				 * @empty false
@@ -473,14 +473,14 @@ describe("Test json schema tranformer", () => {
 				additional: IAdditional;
 			}
 			expect(schema<IAdditional2>(false)).toStrictEqual({
-				type: "object",
-    			props: {
 					str: { type: "string" },
 					additional: {
-						str: { type: "string" },
-						num: { type: "number" }
+						type: "object",
+						props: {
+							str: { type: "string" },
+							num: { type: "number" },
+						}
 					}
-				}
 			});
 		});
 
@@ -532,14 +532,11 @@ describe("Test json schema tranformer", () => {
 			}
 
 			expect(schema<IStep1>()).toStrictEqual({
-				type: "object",
-				props: {
 					step2: { 
 						type: "object",
 						props: {
 							step1: { type: "any" } }
 						}
-				}
 			});
 		});
 	});

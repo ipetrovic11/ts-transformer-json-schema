@@ -249,15 +249,7 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, history?: string[],
   additional?: boolean): ts.ObjectLiteralExpression {
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
-  const nested = properties.reduce( (result, property) => {
-    const historyClone = history? history.slice() : [];
-    
-    let type = detectType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), historyClone);
-    const current = type === 'interface' || type === 'infinite';
-    
-    return result || current;
-  }, false);
-  
+  const nested = additional !== undefined && history && history.length > 1;
 
   const properties_assignments = properties.map( property => {
     let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, history, additional);
