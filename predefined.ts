@@ -1,3 +1,4 @@
+/* tslint:disable:no-empty-interface */
 export interface IDate extends Date{}
 export interface IEmail extends String{}
 export interface IForbidden{}

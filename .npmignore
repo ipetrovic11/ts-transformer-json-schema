@@ -1,0 +1,13 @@
+.idea
+test
+src
+.drone.yml
+*.yml
+wallaby.js
+!dist/**
+**/coverage/**/*
+.editorconfig
+.gitattributes
+jest.config.js
+ tslint.json
+ *.map

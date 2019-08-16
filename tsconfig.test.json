@@ -1,20 +1,16 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "strict": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "noEmitOnError": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
     "plugins": [
       { "transform": "./transformer" }
     ]
   },
-  "include": [
-    "test/*.spec.ts"
+  "plugins": [
+    { "transform": "./transformer" }
   ],
-  "exclude": [
-    "node_modules"
+  "include": [
+    "test/**/*.spec.ts"
   ]
 }

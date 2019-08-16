@@ -1,16 +1,17 @@
-import * as ts from "typescript";
+import * as ts from 'typescript';
 
 interface ArrayTypeChecker extends ts.TypeChecker {
   isArrayType(a: ts.Type): boolean;
+
   isArrayLikeType(a: ts.Type): boolean;
 }
 
 const predefined: { [interfaceName: string]: string } = {
-  IDate: "date",
-  IEmail: "email",
-  IForbidden: "forbidden",
-  IUrl: "url",
-  IUUID: "uuid"
+  IDate: 'date',
+  IEmail: 'email',
+  IForbidden: 'forbidden',
+  IUUID: 'uuid',
+  IUrl: 'url'
 };
 
 interface MaybeIntrinsicType {
@@ -51,7 +52,7 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
   let additional = true;
   const typeArg = typeChecker.getTypeAtLocation(node.arguments[0]);
   if (node.arguments[0] &&
-    (typeArg as MaybeIntrinsicType).intrinsicName === "false") {
+    (typeArg as MaybeIntrinsicType).intrinsicName === 'false') {
     additional = false;
   }
 
@@ -60,16 +61,20 @@ function visitNode(node: ts.Node, program: ts.Program): ts.Node {
 }
 
 function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node is ts.CallExpression {
-  if (!ts.isCallExpression(node)) { return false; }
+  if (!ts.isCallExpression(node)) {
+    return false;
+  }
 
   const signature = typeChecker.getResolvedSignature(node);
-  if (typeof signature === "undefined") { return false; }
+  if (typeof signature === 'undefined') {
+    return false;
+  }
 
-  const { declaration } = signature;
+  const {declaration} = signature;
   return !!declaration
     && !ts.isJSDocSignature(declaration)
     && !!declaration.name
-    && declaration.name!.getText() === "schema";
+    && declaration.name!.getText() === 'schema';
 }
 
 /**
@@ -77,17 +82,18 @@ function isKeysCallExpression(node: ts.Node, typeChecker: ts.TypeChecker): node 
  */
 
 function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
-  additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
+                   additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
 
   const flags = type.flags;
 
+  // tslint:disable:no-bitwise
   if (flags & ts.TypeFlags.StringLike ||
     flags & ts.TypeFlags.NumberLike ||
     flags & ts.TypeFlags.BooleanLike ||
     flags === ts.TypeFlags.Any) {
-    return parsePrimitive(type, tc, ++depth);
+    return parsePrimitive(type, tc);
   }
-
+  // tslint:enable:no-bitwise
   if (flags === ts.TypeFlags.Null ||
     flags === ts.TypeFlags.Undefined) {
     return ts.createObjectLiteral();
@@ -99,7 +105,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
 
     if (predefined[name]) {
       return ts.createObjectLiteral([
-        ts.createPropertyAssignment("type", ts.createLiteral(predefined[name]))
+        ts.createPropertyAssignment('type', ts.createLiteral(predefined[name]))
       ]);
     }
 
@@ -107,17 +113,17 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
       return parseArray(objectType as ts.TypeReference, tc, ++depth);
     }
 
-    if(tc.getIndexInfoOfType(type, ts.IndexKind.Number) || tc.getIndexInfoOfType(type, ts.IndexKind.String)){
+    if (tc.getIndexInfoOfType(type, ts.IndexKind.Number) || tc.getIndexInfoOfType(type, ts.IndexKind.String)) {
       return ts.createObjectLiteral([
-        ts.createPropertyAssignment("type", ts.createLiteral("object"))
+        ts.createPropertyAssignment('type', ts.createLiteral('object'))
       ]);
     }
 
     if (history && history.indexOf(name) !== -1) {
       return ts.createObjectLiteral([
-        ts.createPropertyAssignment("type", ts.createLiteral("any"))
+        ts.createPropertyAssignment('type', ts.createLiteral('any'))
       ]);
-    } else if (history && (name !== "__type" && name !== "Array")) {
+    } else if (history && (name !== '__type' && name !== 'Array')) {
       history.push(name);
     }
 
@@ -131,63 +137,64 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
   if (flags === ts.TypeFlags.Intersection) {
     return parseIntersection(type, tc, ++depth, history);
   }
-
+// tslint:disable:no-bitwise
   if (flags & ts.TypeFlags.EnumLike) {
-    return parseEnum(type, tc, ++depth);
+    return parseEnum(type);
   }
 
-  throw new Error("Unknown type");
+  throw new Error('Unknown type');
 }
 
-function parsePrimitive(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
+function parsePrimitive(type: ts.Type, tc: ts.TypeChecker): ts.ObjectLiteralExpression {
 
   // Handle literal type
-  if(type.flags & ts.TypeFlags.Literal){
+  if (type.flags & ts.TypeFlags.Literal) {
     return ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("enum")),
-      ts.createPropertyAssignment("values", ts.createArrayLiteral([
+      ts.createPropertyAssignment('type', ts.createLiteral('enum')),
+      ts.createPropertyAssignment('values', ts.createArrayLiteral([
         ts.createLiteral((type as unknown as LiteralType).value)
       ]))
     ]);
   }
 
-  const type_string = tc.typeToString(type);
+  const typeString = tc.typeToString(type);
   return ts.createObjectLiteral([
-    ts.createPropertyAssignment("type", ts.createLiteral(type_string))
+    ts.createPropertyAssignment('type', ts.createLiteral(typeString))
   ]);
 }
 
-function parseEnum(type: ts.Type, tc: ts.TypeChecker, depth: number): ts.ObjectLiteralExpression {
-  const enum_type = type as ts.UnionOrIntersectionType;
-  const values = enum_type.types.map(enum_property => {
-    return ts.createLiteral((enum_property as unknown as LiteralType).value);
+function parseEnum(type: ts.Type): ts.ObjectLiteralExpression {
+  const enumType = type as ts.UnionOrIntersectionType;
+  const values = enumType.types.map((enumProperty) => {
+    return ts.createLiteral((enumProperty as unknown as LiteralType).value);
   });
 
   return ts.createObjectLiteral([
-    ts.createPropertyAssignment("type", ts.createLiteral("enum")),
-    ts.createPropertyAssignment("values", ts.createArrayLiteral(values))
+    ts.createPropertyAssignment('type', ts.createLiteral('enum')),
+    ts.createPropertyAssignment('values', ts.createArrayLiteral(values))
   ]);
 }
 
-function parseArray(type: ts.TypeReference, tc: ts.TypeChecker, depth: number, history?: string[]): ts.ObjectLiteralExpression {
+function parseArray(type: ts.TypeReference,
+                    tc: ts.TypeChecker, depth: number, history?: string[]): ts.ObjectLiteralExpression {
   if (type.typeArguments) {
     return ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("array")),
-      ts.createPropertyAssignment("items", parseType(type.typeArguments[0], tc, depth, history))
+      ts.createPropertyAssignment('type', ts.createLiteral('array')),
+      ts.createPropertyAssignment('items', parseType(type.typeArguments[0], tc, depth, history))
     ]);
   }
   return ts.createObjectLiteral([
-    ts.createPropertyAssignment("type", ts.createLiteral("array"))
+    ts.createPropertyAssignment('type', ts.createLiteral('array'))
   ]);
 }
 
 function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
-  additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
-  const union_type = type as ts.UnionOrIntersectionType;
+                    additional?: boolean, optional?: boolean): ts.ObjectLiteralExpression {
+  const unionType = type as ts.UnionOrIntersectionType;
 
   let firstBoolean = true;
-  const types = union_type.types.filter(union_property => {
-    if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
+  const types = unionType.types.filter((unionProperty) => {
+    if (unionProperty.flags & ts.TypeFlags.BooleanLiteral) {
       if (firstBoolean) {
         firstBoolean = false;
         return true;
@@ -196,186 +203,171 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
       }
     }
 
-    if (tc.typeToString(union_property) !== 'undefined') {
-      return true;
-    } else {
-      return false;
-    }
+    return tc.typeToString(unionProperty) !== 'undefined';
   });
 
   if (types.length === 1) {
-    const union_property = types[0];
-    if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
+    const unionProperty = types[0];
+    if (unionProperty.flags & ts.TypeFlags.BooleanLiteral) {
       return ts.createObjectLiteral([
-        ts.createPropertyAssignment("type", ts.createLiteral("boolean"))
+        ts.createPropertyAssignment('type', ts.createLiteral('boolean'))
       ]);
     }
 
-    return parseType(union_property, tc, depth, history, additional);
+    return parseType(unionProperty, tc, depth, history, additional);
   }
 
   /**
    * If all types of union are literals, make an enum
    */
-  let literals = types.length? true: false;
-  for (let union_property of types) {
-    if (!(union_property.flags & ts.TypeFlags.Literal)) {
+  let literals = !!types.length;
+  for (const unionProperty of types) {
+    if (!(unionProperty.flags & ts.TypeFlags.Literal)) {
       literals = false;
     }
   }
   if (literals) {
-    const values = types.map(union_property => {
-      if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
-        if(tc.typeToString(union_property) == 'false'){
+    const values = types.map((unionProperty) => {
+      if (unionProperty.flags & ts.TypeFlags.BooleanLiteral) {
+        if (tc.typeToString(unionProperty) === 'false') {
           return ts.createLiteral(false);
-        }else{
+        } else {
           return ts.createLiteral(true);
         }
       }
-      return ts.createLiteral((union_property as unknown as LiteralType).value);
+      return ts.createLiteral((unionProperty as unknown as LiteralType).value);
     });
     return ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("enum")),
-      ts.createPropertyAssignment("values", ts.createArrayLiteral(values))
+      ts.createPropertyAssignment('type', ts.createLiteral('enum')),
+      ts.createPropertyAssignment('values', ts.createArrayLiteral(values))
     ]);
   }
 
-  const mapped_types = types.map(union_property => {
-    if (union_property.flags & ts.TypeFlags.BooleanLiteral) {
+  const mappedTypes = types.map((mappedPproperty) => {
+    if (mappedPproperty.flags & ts.TypeFlags.BooleanLiteral) {
       return ts.createObjectLiteral([
-        ts.createPropertyAssignment("type", ts.createLiteral("boolean"))
+        ts.createPropertyAssignment('type', ts.createLiteral('boolean'))
       ]);
     }
 
-    return parseType(union_property, tc, depth, history, additional);
+    return parseType(mappedPproperty, tc, depth, history, additional);
   });
 
   if (optional) {
-    mapped_types.push(ts.createObjectLiteral([
-      ts.createPropertyAssignment("type", ts.createLiteral("forbidden"))
-    ]))
+    mappedTypes.push(ts.createObjectLiteral([
+      ts.createPropertyAssignment('type', ts.createLiteral('forbidden'))
+    ]));
   }
 
-  return ts.createArrayLiteral(mapped_types) as unknown as ts.ObjectLiteralExpression;
+  return ts.createArrayLiteral(mappedTypes) as unknown as ts.ObjectLiteralExpression;
 }
 
 function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
-  additional?: boolean): ts.ObjectLiteralExpression {
-  const intersection_type = type as ts.UnionOrIntersectionType;
-  const types = intersection_type.types.map(intersection_property => {
-    return parseType(intersection_property, tc, depth, history, additional);
+                           additional?: boolean): ts.ObjectLiteralExpression {
+  const intersectionType = type as ts.UnionOrIntersectionType;
+  const types = intersectionType.types.map((intersectionProperty) => {
+    return parseType(intersectionProperty, tc, depth, history, additional);
   });
 
-  const combined_properties: ts.ObjectLiteralElementLike[] = [];
-  types.forEach(type => {
-    type.properties.forEach(property => {
+  const combinedProperties: ts.ObjectLiteralElementLike[] = [];
+  types.forEach((combinedProp) => {
+    combinedProp.properties.forEach((property) => {
       if (property.name) {
         const indentifier = property.name as ts.Identifier;
-        if (indentifier.escapedText === "props") {
+        if (indentifier.escapedText === 'props') {
           const assignment = property as ts.PropertyAssignment;
           const props = assignment.initializer as unknown as ts.ObjectLiteralExpressionBase<ts.PropertyAssignment>;
-          props.properties.forEach(prop => {
-            combined_properties.push(prop)
+          props.properties.forEach((prop) => {
+            combinedProperties.push(prop);
           });
         }
       }
     });
   });
 
-
-  let properties_assignments = [];
+  let propertiesAssignments = [];
   if (depth > 1) {
-    properties_assignments.push(ts.createPropertyAssignment("type", ts.createLiteral("object")));
-    properties_assignments.push(ts.createPropertyAssignment("props", ts.createObjectLiteral(combined_properties)));
+    propertiesAssignments.push(ts.createPropertyAssignment('type', ts.createLiteral('object')));
+    propertiesAssignments.push(ts.createPropertyAssignment('props', ts.createObjectLiteral(combinedProperties)));
   } else {
-    properties_assignments = combined_properties
+    propertiesAssignments = combinedProperties;
   }
 
-  return ts.createObjectLiteral(properties_assignments);
+  return ts.createObjectLiteral(propertiesAssignments);
 }
 
 function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: string[],
-  additional?: boolean): ts.ObjectLiteralExpression {
+                        additional?: boolean): ts.ObjectLiteralExpression {
   const properties = tc.getPropertiesOfType(type).filter((property) => property.declarations!.length);
 
-  const properties_assignments = properties.map(property => {
+  const propertiesAssignments = properties.map((property) => {
     const declaration: ts.ParameterDeclaration = property.declarations[0] as ts.ParameterDeclaration;
 
-    const optional = declaration.questionToken ? true : false;
-    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property, property.declarations![0]), tc, depth, history, additional, optional);
+    const optional = !!declaration.questionToken;
+    let parsed = parseType(tc.getTypeOfSymbolAtLocation(property,
+      property.declarations![0]), tc, depth, history, additional, optional);
 
     if (optional && parsed.properties) {
-      parsed = addProperty(parsed, "optional", true);
+      parsed = addProperty(parsed, 'optional', true);
     }
 
-    const docs = property.getJsDocTags();
-    if (additional && docs.length && parsed.properties) {
-      parsed = addProperties(parsed, parseJSDoc(docs));
+    const jsDocs = property.getJsDocTags();
+    if (additional && jsDocs.length && parsed.properties) {
+      parsed = addProperties(parsed, parseJSDoc(jsDocs));
     }
 
     return ts.createPropertyAssignment(property.name, parsed);
-  })
+  });
 
-  if (properties_assignments.length === 0) {
+  if (propertiesAssignments.length === 0) {
     return ts.createObjectLiteral();
   }
 
-  let neasted_properties_assignments = [];
+  let nestedPropertiesAssignments = [];
 
   if (depth > 1) {
-    neasted_properties_assignments.push(ts.createPropertyAssignment("type", ts.createLiteral("object")));
-    neasted_properties_assignments.push(ts.createPropertyAssignment("props", ts.createObjectLiteral(properties_assignments)));
+    nestedPropertiesAssignments.push(ts.createPropertyAssignment('type', ts.createLiteral('object')));
+    nestedPropertiesAssignments.push(ts.createPropertyAssignment(
+      'props', ts.createObjectLiteral(propertiesAssignments)));
   } else {
-    neasted_properties_assignments = properties_assignments
+    nestedPropertiesAssignments = propertiesAssignments;
   }
 
   const docs = type.symbol.getJsDocTags();
   if (additional && docs.length) {
-    parseJSDoc(docs).forEach(property => {
-      neasted_properties_assignments.push(property);
+    parseJSDoc(docs).forEach((property) => {
+      nestedPropertiesAssignments.push(property);
     });
   }
 
-  return ts.createObjectLiteral(neasted_properties_assignments);
+  return ts.createObjectLiteral(nestedPropertiesAssignments);
 
 }
 
-
-
-/**
- * HELPER FUNCTIONS
- */
-function combineObjects(o1: ts.ObjectLiteralExpression, o2: ts.ObjectLiteralExpression): ts.ObjectLiteralExpression {
-  const combined_properties: ts.ObjectLiteralElementLike[] = [];
-
-  o1.properties.forEach(property => combined_properties.push(property));
-  o2.properties.forEach(property => combined_properties.push(property));
-
-  return ts.createObjectLiteral(combined_properties);
-}
-
-function addProperties(object: ts.ObjectLiteralExpression, combined_properties: ts.ObjectLiteralElementLike[]): ts.ObjectLiteralExpression {
-  object.properties.forEach(property => combined_properties.push(property));
-  return ts.createObjectLiteral(combined_properties);
+function addProperties(object: ts.ObjectLiteralExpression,
+                       combinedProperties: ts.ObjectLiteralElementLike[]):
+  ts.ObjectLiteralExpression {
+  object.properties.forEach((property) => combinedProperties.push(property));
+  return ts.createObjectLiteral(combinedProperties);
 }
 
 function addProperty(object: ts.ObjectLiteralExpression, name: string, value: any): ts.ObjectLiteralExpression {
-  const combined_properties: ts.ObjectLiteralElementLike[] = [];
+  const combinedProperties: ts.ObjectLiteralElementLike[] = [];
 
-  object.properties.forEach(property => combined_properties.push(property));
-  combined_properties.push(ts.createPropertyAssignment(name, ts.createLiteral(value)));
+  object.properties.forEach((property) => combinedProperties.push(property));
+  combinedProperties.push(ts.createPropertyAssignment(name, ts.createLiteral(value)));
 
-  return ts.createObjectLiteral(combined_properties);
+  return ts.createObjectLiteral(combinedProperties);
 }
 
 function parseJSDoc(docs: ts.JSDocTagInfo[]): ts.PropertyAssignment[] {
-  return docs.filter(doc => doc.text).map(doc => {
+  return docs.filter((doc) => doc.text).map((doc) => {
     let value: any = doc.text;
-    if (value === "true") {
+    if (value === 'true') {
       value = true;
     }
 
-    if (value === "false") {
+    if (value === 'false') {
       value = false;
     }
 
@@ -383,6 +375,6 @@ function parseJSDoc(docs: ts.JSDocTagInfo[]): ts.PropertyAssignment[] {
       value = Number(value);
     }
 
-    return ts.createPropertyAssignment(doc.name, ts.createLiteral(value))
+    return ts.createPropertyAssignment(doc.name, ts.createLiteral(value));
   });
 }
