@@ -1,16 +1,6 @@
 {
-  "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "strict": true,
-    "noEmitOnError": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
-  },
+  "extends": "./tsconfig.base.json",
   "include": [
     "index.ts"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }
