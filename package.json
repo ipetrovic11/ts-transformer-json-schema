@@ -6,7 +6,8 @@
   "scripts": {
     "prepublish": "ttsc",
     "pretest": "ttsc",
-    "test": "ttsc --project tsconfig.test.json && jest --coverage"
+    "test": "ttsc --project tsconfig.test.json && jest --coverage",
+    "postinstall": "tsc"
   },
   "repository": {
     "type": "git",
