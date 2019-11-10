@@ -2,12 +2,12 @@
   "name": "ts-transformer-json-schema",
   "version": "0.6.12",
   "description": "A TypeScript custom transformer to obtain JSON schema from interface.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "prepublish": "ttsc",
     "pretest": "ttsc",
     "test": "ttsc --project tsconfig.test.json && jest --coverage",
-    "postinstall": "tsc"
+    "postinstall": "tsc && cp predefined.d.ts ./dist"
   },
   "repository": {
     "type": "git",

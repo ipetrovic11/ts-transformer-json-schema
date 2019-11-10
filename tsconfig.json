@@ -2,13 +2,18 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
+    "declaration": true,
     "strict": true,
     "noEmitOnError": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./dist",
   },
+  "files": [
+    "predefined.d.ts"
+  ],
   "include": [
-    "index.ts"
+    "index.ts",
   ],
   "exclude": [
     "node_modules"
