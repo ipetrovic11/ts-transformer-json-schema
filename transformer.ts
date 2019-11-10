@@ -144,7 +144,7 @@ function parseType(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: s
 
 function parsePrimitive(type: ts.Type, tc: ts.TypeChecker, depth: number, optional?: boolean): ts.ObjectLiteralExpression {
 
-  const props = [];
+  const props: ts.PropertyAssignment[] = [];
   if (optional) {
     props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
   }
@@ -178,7 +178,7 @@ function parseEnum(type: ts.Type, tc: ts.TypeChecker, depth: number, optional?: 
     return ts.createLiteral((enum_property as unknown as LiteralType).value);
   });
 
-  const props = [];
+  const props: ts.PropertyAssignment[] = [];
   if (optional) {
     props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
   }
@@ -191,7 +191,7 @@ function parseEnum(type: ts.Type, tc: ts.TypeChecker, depth: number, optional?: 
 
 function parseArray(type: ts.TypeReference, tc: ts.TypeChecker, depth: number, history?: string[], optional?: boolean): ts.ObjectLiteralExpression {
 
-  const props = [];
+  const props: ts.PropertyAssignment[] = [];
   if (optional) {
     props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
   }
@@ -269,7 +269,7 @@ function parseUnion(type: ts.Type, tc: ts.TypeChecker, depth: number, history?: 
       return ts.createLiteral((union_property as unknown as LiteralType).value);
     });
 
-    const props = [];
+    const props: ts.PropertyAssignment[] = [];
     if (optional || unionOptional) {
       props.push(ts.createPropertyAssignment("optional", ts.createLiteral(true)));
     }
@@ -326,7 +326,7 @@ function parseIntersection(type: ts.Type, tc: ts.TypeChecker, depth: number, his
     });
   });
 
-  let properties_assignments = [];
+  let properties_assignments: Array<ts.PropertyAssignment | ts.ObjectLiteralElementLike> = [];
   if (depth > 1) {
     properties_assignments.push(ts.createPropertyAssignment("type", ts.createLiteral("object")));
     properties_assignments.push(ts.createPropertyAssignment("props", ts.createObjectLiteral(combined_properties)));
@@ -388,7 +388,7 @@ function parseInterface(type: ts.Type, tc: ts.TypeChecker, depth: number, histor
     return ts.createObjectLiteral();
   }
 
-  let neasted_properties_assignments = [];
+  let neasted_properties_assignments: Array<ts.PropertyAssignment | ts.ObjectLiteralElementLike> = [];
 
   if (depth > 1) {
     neasted_properties_assignments.push(ts.createPropertyAssignment("type", ts.createLiteral("object")));
