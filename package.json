@@ -1,4 +1,4 @@
-
+{
   "name": "ts-transformer-json-schema",
   "version": "0.6.12",
   "description": "A TypeScript custom transformer to obtain JSON schema from interface.",
