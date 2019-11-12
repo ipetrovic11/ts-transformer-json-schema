@@ -6,14 +6,13 @@
     "strict": true,
     "noEmitOnError": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "outDir": "./dist",
+    "noFallthroughCasesInSwitch": true
   },
   "files": [
     "predefined.d.ts"
   ],
   "include": [
-    "index.ts",
+    "index.ts"
   ],
   "exclude": [
     "node_modules"
