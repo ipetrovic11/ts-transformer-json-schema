@@ -7,7 +7,6 @@
     "prepublish": "ttsc",
     "pretest": "ttsc",
     "test": "ttsc --project tsconfig.test.json && jest --coverage"
-    "postinstall": "ttsc"
   },
   "repository": {
     "type": "git",
